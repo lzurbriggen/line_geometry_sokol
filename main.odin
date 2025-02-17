@@ -142,64 +142,62 @@ buffer_append :: proc(buf: ^[$N]$T, buf_len: ^int, element: T) {
 }
 
 apply_line_geometry :: proc(
-	def: Line,
+	line: Line,
 	verts: ^[VERT_BUFFER_SIZE]Vert,
 	verts_len: ^int,
 	idxs: ^[IDX_BUFFER_SIZE][3]u16,
 	idxs_len: ^int,
 ) {
-	pts_len := len(def.pts)
-
-	color := [4]f32{def.color.r, def.color.g, def.color.b, def.color.a}
-
+	pts_len := len(line.pts)
+	color := [4]f32{line.color.r, line.color.g, line.color.b, line.color.a}
 	if pts_len < 2 {
 		return
 	}
 
 	start_vert_idx := verts_len^
 	for i in 0 ..< pts_len {
-		half_thickness := def.thickness / 2
+		half_thickness := line.thickness / 2
 
-		idx_prev := wrap_idx(i - 1, pts_len)
-		idx_0 := i
-		idx_1 := wrap_idx(i + 1, pts_len)
-		p_prev := def.pts[idx_prev]
-		p_0 := def.pts[idx_0]
-		p_1 := def.pts[idx_1]
+		idx_a := wrap_idx(i - 1, pts_len)
+		idx_b := i
+		idx_c := wrap_idx(i + 1, pts_len)
+		a := line.pts[idx_a]
+		b := line.pts[idx_b]
+		c := line.pts[idx_c]
 
-		dir: Vec2
-		if !def.closed && i == 0 {
-			// for the start points, we need the normal of the second segment instead
-			dir = linalg.normalize(p_1 - p_0)
-		} else {
-			dir = linalg.normalize(p_0 - p_prev)
-		}
-		normal := Vec2{-dir.y, dir.x}
+		dirAB := linalg.normalize(b - a)
+		normalAB := Vec2{-dirAB.y, dirAB.x}
+		dirBC := linalg.normalize(c - b)
+		normalBC := Vec2{-dirBC.y, dirBC.x}
 
 		m0, m1: Vec2
 		// if the line should not be closed and we are at the beginning
 		// or end of the line, we don't calculate miters
-		if !def.closed && (i == 0 || i == pts_len - 1) {
-			m0 = p_0 + normal * half_thickness
-			m1 = p_0 - normal * half_thickness
+		if !line.closed && (i == 0 || i == pts_len - 1) {
+			normal := normalAB
+			if i == 0 {
+				normal = normalBC
+			}
+			m0 = b + normal * half_thickness
+			m1 = b - normal * half_thickness
 		} else {
-			dir2 := linalg.normalize(p_1 - p_0)
-			miter_normal := linalg.normalize(dir2 + dir)
-			miter_dir := Vec2{-miter_normal.y, miter_normal.x}
-			length := half_thickness / linalg.dot(miter_dir, normal)
+			// get the miter direction using the normals of both segments
+			miter_dir := linalg.normalize(normalBC + normalAB)
+			// project onto the normal to get the length
+			length := half_thickness / linalg.dot(miter_dir, normalAB)
 
-			m0 = p_0 + miter_dir * length
-			m1 = p_0 - miter_dir * length
+			m0 = b + miter_dir * length
+			m1 = b - miter_dir * length
 		}
 
 		buffer_append(verts, verts_len, Vert{pos = m0, color = color})
 		buffer_append(verts, verts_len, Vert{pos = m1, color = color})
 	}
 
-	vert_len := verts_len^ - start_vert_idx
+	vert_len := pts_len * 2
 	for i := 0; i < vert_len; i += 2 {
 		// don't connect start- and end vertices if the line should not be closed
-		if !def.closed && i >= vert_len - 2 {
+		if !line.closed && i >= vert_len - 2 {
 			break
 		}
 		idx_a := u16(start_vert_idx + i)
