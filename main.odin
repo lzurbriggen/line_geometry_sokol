@@ -7,10 +7,12 @@ import slog "./sokol/sokol/log"
 import "base:runtime"
 import "core:fmt"
 import "core:math/linalg"
-import m "math"
 
 VERT_BUFFER_SIZE :: 1000
 IDX_BUFFER_SIZE :: 1000
+
+Vec2 :: [2]f32
+Mat4 :: matrix[4, 4]f32
 
 state: struct {
 	pass_action:  gfx.Pass_Action,
@@ -51,7 +53,7 @@ init :: proc "c" () {
 			index_type = .UINT16,
 			layout = {
 				attrs = {
-					ATTR_line_pos = {format = .FLOAT3, buffer_index = 0},
+					ATTR_line_pos = {format = .FLOAT2, buffer_index = 0},
 					ATTR_line_color0 = {format = .FLOAT4, buffer_index = 0},
 				},
 			},
@@ -109,7 +111,7 @@ main :: proc() {
 }
 
 Line :: struct {
-	pts:       []m.vec2,
+	pts:       []Vec2,
 	color:     gfx.Color,
 	thickness: f32,
 	closed:    bool,
@@ -121,15 +123,14 @@ wrap_idx := proc(idx, len: int) -> int {
 
 Vert :: struct {
 	pos:   [2]f32,
-	z:     f32,
 	color: [4]f32,
 }
 
-apply_unclosed_ending_pts :: proc(def: Line, idx_a, idx_b: int) -> [2]m.vec2 {
+apply_unclosed_ending_pts :: proc(def: Line, idx_a, idx_b: int) -> [2]Vec2 {
 	p0 := def.pts[idx_a]
 	p1 := def.pts[idx_b]
 	line := p1 - p0
-	normal := linalg.normalize(m.vec2{-line.y, line.x})
+	normal := linalg.normalize(Vec2{-line.y, line.x})
 	a := p0 + normal * def.thickness / 2
 	b := p0 - normal * def.thickness / 2
 	return {a, b}
@@ -166,16 +167,16 @@ apply_line_geometry :: proc(
 		p_0 := def.pts[idx_0]
 		p_1 := def.pts[idx_1]
 
-		dir: m.vec2
+		dir: Vec2
 		if !def.closed && i == 0 {
 			// for the start points, we need the normal of the second segment instead
 			dir = linalg.normalize(p_1 - p_0)
 		} else {
 			dir = linalg.normalize(p_0 - p_prev)
 		}
-		normal := m.vec2{-dir.y, dir.x}
+		normal := Vec2{-dir.y, dir.x}
 
-		m0, m1: m.vec2
+		m0, m1: Vec2
 		// if the line should not be closed and we are at the beginning
 		// or end of the line, we don't calculate miters
 		if !def.closed && (i == 0 || i == pts_len - 1) {
@@ -184,7 +185,7 @@ apply_line_geometry :: proc(
 		} else {
 			dir2 := linalg.normalize(p_1 - p_0)
 			miter_normal := linalg.normalize(dir2 + dir)
-			miter_dir := m.vec2{-miter_normal.y, miter_normal.x}
+			miter_dir := Vec2{-miter_normal.y, miter_normal.x}
 			length := half_thickness / linalg.dot(miter_dir, normal)
 
 			m0 = p_0 + miter_dir * length
