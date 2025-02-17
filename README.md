@@ -1,7 +1,8 @@
 ## Run
 
-1. Build sokol as instructed in `vendor/sokol/README.md`
-2. `odin run ./`
+1. `git submodule update --init` to make sure the dependencies are cloned
+2. Build sokol as instructed in `vendor/sokol/README.md`
+3. `odin run ./`
 
 ## Recompile shader
 
