@@ -1,5 +1,5 @@
 package main
-import sg "sokol/sokol/gfx"
+import sg "./vendor/sokol-odin/sokol/gfx"
 /*
     #version:1# (machine generated, don't edit!)
 

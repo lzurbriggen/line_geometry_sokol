@@ -1,9 +1,9 @@
 package main
 
-import sapp "./sokol/sokol/app"
-import "./sokol/sokol/gfx"
-import sglue "./sokol/sokol/glue"
-import slog "./sokol/sokol/log"
+import sapp "./vendor/sokol-odin/sokol/app"
+import "./vendor/sokol-odin/sokol/gfx"
+import sglue "./vendor/sokol-odin/sokol/glue"
+import slog "./vendor/sokol-odin/sokol/log"
 import "base:runtime"
 import "core:fmt"
 import "core:math/linalg"

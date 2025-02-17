@@ -1,6 +1,6 @@
-[submodule "sokol"]
-	path = sokol
+[submodule "vendor/sokol-odin"]
+	path = vendor/sokol-odin
 	url = https://github.com/floooh/sokol-odin.git
-[submodule "sokol-tools-bin"]
-	path = sokol-tools-bin
+[submodule "vendor/sokol-tools-bin"]
+	path = vendor/sokol-tools-bin
 	url = https://github.com/floooh/sokol-tools-bin.git

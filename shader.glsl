@@ -1,5 +1,5 @@
 @header package main
-@header import sg "sokol/sokol/gfx"
+@header import sg "./vendor/sokol-odin/sokol/gfx"
 @ctype mat4 Mat4
 
 @vs vs
